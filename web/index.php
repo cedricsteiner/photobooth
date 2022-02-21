@@ -5,7 +5,7 @@ use BenMajor\ImageResize\Image;
 use BenMajor\ImageResize\Watermark;
 
 ?>
-<?php require_once 'config.php'; ?>
+<?php require_once 'config-local.php'; ?>
 <?php
 
 initdir($imagepath . '/tmp');
@@ -31,7 +31,7 @@ if(isset($_GET['prepare'])) {
         copy($image, $originalImage);
 
         // converting
-        if(convert($originalImage, $showImage)) {
+        if(convert($originalImage, $showImage, $photoSize, $watermarkSize)) {
             echo '/images/show/' . $imageName;
         }
         else {
@@ -58,17 +58,17 @@ function initdir($path) {
         return mkdir($path);
     }
 }
-function convert($oImage, $sImage) {
+function convert($oImage, $sImage, $pSize, $wmSize) {
 
     $image = new Image($oImage);
 
     $watermark = new Watermark('./app/watermark2.png');
     $watermark->setPosition('bl');
-    $watermark->setWidth(200);
+    $watermark->setWidth($wmSize);
     //$watermark->setMargin(100 );
 
     $image->addWatermark( $watermark );
-    $image->resizeWidth(1500);
+    $image->resizeWidth($pSize);
     $image->output('./images/show/');
     return true;
 }
@@ -90,15 +90,17 @@ function webUrl($base, $image) {
     <title>Foto-Box</title>
     <style>
         @font-face {
-            font-family: "Boogaloo";
-            src: url("Boogaloo-Regular.ttf") format("ttf");
+            font-family: 'Boogaloo';
+            font-style: normal;
+            font-weight: 400;
+            src: url(./app/Boogaloo-Regular.ttf) format("truetype");
         }
         html {
             font-size: <?= $fontsize ?>px;
             height: 100%;
         }
         body {
-            font-family: 'Boogaloo';
+            font-family: 'Boogaloo', sans-serif;
             background: black;
             color: white;
             height: 100%;
@@ -128,6 +130,7 @@ function webUrl($base, $image) {
 <script src="app/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="app/qrcode.min.js" crossorigin="anonymous"></script>
 <?php if(empty($_GET)) : ?>
+    <?php $result = runcmd('flashdown'); ?>
     <div style="height:100%" class="d-flex align-items-center">
         <div class="container text-center">
             <h1><?= $title ?></h1>
