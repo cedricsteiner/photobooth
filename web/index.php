@@ -28,7 +28,9 @@ if(isset($_GET['prepare'])) {
         $originalImage = $imagepath . '/original/' . $imageName;
         $showImage = $imagepath . '/show/' . $imageName;
         //rename($image, $originalImage);
-        copy($image, $originalImage);
+        if(copy($image, $originalImage)) {
+            unlink($image);
+        }
 
         // converting
         if(convert($originalImage, $showImage, $photoSize, $watermarkSize)) {
@@ -49,7 +51,7 @@ if(isset($_GET['flashdown'])) {
     exit;
 }
 function runcmd($cmd) {
-    $result = exec('./cmd/' . $cmd . '.sh');
+    $result = exec('sh ./cmd/' . $cmd . '.sh 2>&1');
     exec('echo "' . $result . '" >> ./log/cmd.log');
     return $result;
 }
