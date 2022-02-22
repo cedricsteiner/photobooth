@@ -45,13 +45,27 @@ if(isset($_GET['prepare'])) {
     }
     exit;
 }
+if(isset($_GET['upload'])) {
+    $image = $_GET['src'];
+
+    $result = runcmd('bash /home/pi/Dropbox-Uploader/dropbox_uploader.sh -s -f /home/pi/.dropbox_uploader upload /var/www/photobooth/web/images/show/' . $image . ' images/' . $image , true);
+    //echo $result;
+    $result = runcmd('bash /home/pi/Dropbox-Uploader/dropbox_uploader.sh -s -f /home/pi/.dropbox_uploader share images/' . $image , true);
+    echo str_replace('?dl=0', '?raw=1', 'http' . substr($result, strpos($result, "http") + 4));
+    exit;
+}
 if(isset($_GET['flashdown'])) {
     $result = runcmd('flashdown');
     echo $result;
     exit;
 }
-function runcmd($cmd) {
-    $result = exec('sh ./cmd/' . $cmd . '.sh 2>&1');
+function runcmd($cmd, $full = false) {
+    if($full) {
+        $result = exec($cmd . ' 2>&1');
+    }
+    else {
+        $result = exec('sh ./cmd/' . $cmd . '.sh 2>&1');
+    }
     exec('echo "' . $result . '" >> ./log/cmd.log');
     return $result;
 }
@@ -215,29 +229,45 @@ function webUrl($base, $image) {
     <img id="photo" src="<?= $_GET['src'] ?>" width="100%" />
     <div class="container bottom-bar">
         <a class="<?= $btnClass ?>" href="?take">Neues Foto</a>&nbsp;
-        <a class="<?= $btnClass ?>" href="#" onclick="javascript:qrCode();void(0);">QR-Code</a>
+        <a id="qrbutton" class="<?= $btnClass ?>" href="#" onclick="javascript:qrToggle();void(0);">QR-Code</a>
         <div id="qrcode"></div>
     </div>
     <script>
         $( document ).ready(function() {
             setTimeout(flashdown, <?= $flashdown ?> * 1000);
+            
+            $('#qrbutton').hide();
+            upload();
         });
 
-        function qrCode() {
+        function qrCode(link) {
             var qrEl = $('#qrcode');
             if(qrEl.data('generated') != 1) {
                 var qrcode = new QRCode(document.getElementById("qrcode"), {
-                    text: '<?= webUrl($webUrlBase, $_GET['src']); ?>',
+                    text: link,
+                    /*text: '<?= webUrl($webUrlBase, $_GET['src']); ?>',*/
                     width : 300,
                     height : 300,
                     useSVG: true
                 });
                 qrEl.data('generated', 1);
+                $('#qrbutton').show();
             }
-            qrEl.toggle();
         }
 
+        function qrToggle() {
+            $('#qrcode').toggle();
+        }
 
+        function upload() {
+            $.ajax({
+                url: "?upload&src=<?= basename($_GET['src']) ?>",
+            }).done(function(data) {
+                console.log(data);
+                qrCode(data);
+            });
+            //location.href = '?photo';
+        }
 
         function flashdown() {
             $.ajax({
