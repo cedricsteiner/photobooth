@@ -130,10 +130,10 @@ function getconfig($attribute) {
             height: 100%;
         }
         #camPreview {
-            height: 100%;
             position: fixed;
             object-fit: cover;
             width: <?= getconfig('preview_size'); ?>;
+            height: <?= getconfig('preview_size'); ?>;
             left: <?= getconfig('preview_left'); ?>;
             top: <?= getconfig('preview_top'); ?>;
         }
