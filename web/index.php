@@ -5,12 +5,12 @@ use BenMajor\ImageResize\Image;
 use BenMajor\ImageResize\Watermark;
 
 ?>
-<?php require_once 'config-local.php'; ?>
+<?php $config = parse_ini_file('admin/config.ini');  ?>
 <?php
 
-initdir($imagepath . '/tmp');
-initdir($imagepath . '/original');
-initdir($imagepath . '/show');
+initdir(getconfig('imagepath') . '/tmp');
+initdir(getconfig('imagepath') . '/original');
+initdir(getconfig('imagepath') . '/show');
 
 $btnClass = "btn btn-warning btn-lg";
 
@@ -20,20 +20,20 @@ if(isset($_GET['capture'])) {
     exit;
 }
 if(isset($_GET['prepare'])) {
-    foreach(glob($imagepath . '/tmp/*.jpg') as $image) {
+    foreach(glob(getconfig('imagepath') . '/tmp/*.jpg') as $image) {
         break;
     }
     if($image) {
         $imageName =  date("Y-m-d_H-i-s", time()) . '.jpg';
-        $originalImage = $imagepath . '/original/' . $imageName;
-        $showImage = $imagepath . '/show/' . $imageName;
+        $originalImage = getconfig('imagepath') . '/original/' . $imageName;
+        $showImage = getconfig('imagepath') . '/show/' . $imageName;
         //rename($image, $originalImage);
         if(copy($image, $originalImage)) {
             unlink($image);
         }
 
         // converting
-        if(convert($originalImage, $showImage, $photoSize, $watermarkSize)) {
+        if(convert($originalImage, $showImage, getconfig('photo_size'), getconfig('watermark_size'))) {
             echo '/images/show/' . $imageName;
         }
         else {
@@ -89,8 +89,11 @@ function convert($oImage, $sImage, $pSize, $wmSize) {
     return true;
 }
 function webUrl($base, $image) {
-    //return '1234567890';
     return $base . $image;
+}
+function getconfig($attribute) {
+    global $config;
+    return $config[$attribute];
 }
 ?>
 <!doctype html>
@@ -112,7 +115,7 @@ function webUrl($base, $image) {
             src: url(./app/Boogaloo-Regular.ttf) format("truetype");
         }
         html {
-            font-size: <?= $fontsize ?>px;
+            font-size: <?= getconfig('font_size'); ?>px;
             height: 100%;
         }
         body {
@@ -124,9 +127,9 @@ function webUrl($base, $image) {
         #camPreview {
             height: 100%;
             position: fixed;
-            width: <?= $previewSize ?>;
-            left: <?= $previewLeft ?>;
-            top: <?= $previewTop ?>;
+            width: <?= getconfig('preview_size'); ?>;
+            left: <?= getconfig('preview_left'); ?>;
+            top: <?= getconfig('preview_top'); ?>;
         }
         .bottom-bar {
             position: fixed;
@@ -149,8 +152,8 @@ function webUrl($base, $image) {
     <?php $result = runcmd('flashdown'); ?>
     <div style="height:100%" class="d-flex align-items-center">
         <div class="container text-center">
-            <h1><?= $title ?></h1>
-            <p><?= $description ?></p>
+            <h1><?= getconfig('title'); ?></h1>
+            <p><?= getconfig('description'); ?></p>
             <a class="<?= $btnClass ?>" href="?take">Zur Kamera-Vorschau</a>
         </div>
     </div>
@@ -180,7 +183,7 @@ function webUrl($base, $image) {
             }
         });
         function take() {
-            let countdown = <?= $countdown ?>;
+            let countdown = <?= getconfig('coundtdown'); ?>;
             var counter = countdown;
             var countdownEl = $('#countdown');
             countdownEl.text(counter);
@@ -234,7 +237,7 @@ function webUrl($base, $image) {
     </div>
     <script>
         $( document ).ready(function() {
-            setTimeout(flashdown, <?= $flashdown ?> * 1000);
+            setTimeout(flashdown, <?= getconfig('flashdown'); ?> * 1000);
             
             $('#qrbutton').hide();
             upload();
@@ -245,7 +248,7 @@ function webUrl($base, $image) {
             if(qrEl.data('generated') != 1) {
                 var qrcode = new QRCode(document.getElementById("qrcode"), {
                     text: link,
-                    /*text: '<?= webUrl($webUrlBase, $_GET['src']); ?>',*/
+                    /*text: '<?= webUrl(getconfig('web_url_base'), $_GET['src']); ?>',*/
                     width : 300,
                     height : 300,
                     useSVG: true
