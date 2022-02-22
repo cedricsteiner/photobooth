@@ -147,6 +147,14 @@ function getconfig($attribute) {
             bottom: 0.5em;
             right: 0.5em;
         }
+        #photo {
+
+            widht: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
     </style>
 </head>
 <body>
@@ -234,7 +242,7 @@ function getconfig($attribute) {
     </script>
 
 <?php elseif(isset($_GET['photo'])) :  ?>
-    <img id="photo" src="<?= $_GET['src'] ?>" width="100%" />
+    <div id="photo" style="background-image:url('<?= $_GET['src'] ?>');" ></div>
     <div class="container bottom-bar">
         <a class="<?= $btnClass ?>" href="?take">Neues Foto</a>&nbsp;
         <a id="qrbutton" class="<?= $btnClass ?>" href="#" onclick="javascript:qrToggle();void(0);">QR-Code</a>
