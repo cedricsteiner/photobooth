@@ -1,2 +1,4 @@
 .idea/*
 .ddev/*
+web/admin/config.ini
+web/admin/backups
