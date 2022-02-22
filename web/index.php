@@ -132,7 +132,7 @@ function getconfig($attribute) {
         #camPreview {
             height: 100%;
             position: fixed;
-            width: <?= getconfig('preview_size'); ?>;
+            width: 100%;
             left: <?= getconfig('preview_left'); ?>;
             top: <?= getconfig('preview_top'); ?>;
         }
@@ -192,9 +192,11 @@ function getconfig($attribute) {
             var video = document.querySelector("#camPreview");
 
             if (navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
+                navigator.mediaDevices.getUserMedia({video: { zoom: true }})
                     .then(function (stream) {
                         video.srcObject = stream;
+                        const [track] = mediaStream.getVideoTracks();
+                        track.applyConstraints({advanced: [ {zoom: <?= getconfig('preview_size'); ?>} ]});
                     })
                     .catch(function (err0r) {
                         console.log("Fehler bei der Kamera-Vorschau!");
