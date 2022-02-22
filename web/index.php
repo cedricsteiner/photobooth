@@ -180,8 +180,9 @@ function getconfig($attribute) {
     $result = runcmd('flashup');
     //echo $result;
     ?><div style="height:100%" class="d-flex align-items-center">
-    <div class="container text-center">
-        Vorschau ladet...</div></div>
+        <div id="preview-wait" class="container text-center">Vorschau ladet...</div>
+        <div id="prepare-wait" style="font-size: 300%; display: none;" class="container text-center">Ein Moment...</div>
+    </div>
     <video autoplay="true" id="camPreview"></video>
         <div class="container bottom-bar">
             <a class="<?= $btnClass ?>" href="#" onclick="javascript:take();void(0)" id="countdown">Foto aufnehmen</a>
@@ -227,6 +228,9 @@ function getconfig($attribute) {
         }
         function prepare() {
             $('#countdown').text('Verarbeitung...');
+            $('#camPreview').hide();
+            $('#preview-wait').hide();
+            $('#prepare-wait').show();
             $.ajax({
                 url: "?prepare",
             }).done(function(data) {
