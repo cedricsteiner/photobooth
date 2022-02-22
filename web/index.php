@@ -188,7 +188,7 @@ function getconfig($attribute) {
             }
         });
         function take() {
-            let countdown = <?= getconfig('coundtdown'); ?>;
+            let countdown = <?= getconfig('countdown'); ?>;
             var counter = countdown;
             var countdownEl = $('#countdown');
             countdownEl.text(counter);
