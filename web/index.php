@@ -11,6 +11,7 @@ use BenMajor\ImageResize\Watermark;
 initdir(getconfig('imagepath') . '/tmp');
 initdir(getconfig('imagepath') . '/original');
 initdir(getconfig('imagepath') . '/show');
+initdir(getconfig('imagepath') . '/thumb');
 
 $btnClass = "btn btn-warning btn-lg";
 
@@ -34,7 +35,7 @@ if(isset($_GET['prepare'])) {
 
         // converting
         if(convert($originalImage, $showImage, getconfig('photo_size'), getconfig('watermark_size'))) {
-            echo '/images/show/' . $imageName;
+            echo $imageName;
         }
         else {
             echo 'Fehler bei der Bildbearbeitung';
@@ -86,6 +87,10 @@ function convert($oImage, $sImage, $pSize, $wmSize) {
     $image->addWatermark( $watermark );
     $image->resizeWidth($pSize);
     $image->output('./images/show/');
+    // thumb
+    $thumb = new Image( $sImage);
+    $thumb->resizeWidth(1200);
+    $thumb->output('./images/thumb/');
     return true;
 }
 function webUrl($base, $image) {
@@ -242,7 +247,7 @@ function getconfig($attribute) {
     </script>
 
 <?php elseif(isset($_GET['photo'])) :  ?>
-    <div id="photo" style="background-image:url('<?= $_GET['src'] ?>');" ></div>
+    <div id="photo" style="background-image:url('/images/thumb/<?= $_GET['src'] ?>');" ></div>
     <div class="container bottom-bar">
         <a class="<?= $btnClass ?>" href="?take">Neues Foto</a>&nbsp;
         <a id="qrbutton" class="<?= $btnClass ?>" href="#" onclick="javascript:qrToggle();void(0);">QR-Code</a>
@@ -277,7 +282,7 @@ function getconfig($attribute) {
 
         function upload() {
             $.ajax({
-                url: "?upload&src=<?= basename($_GET['src']) ?>",
+                url: "?upload&src=<?= $_GET['src']; ?>",
             }).done(function(data) {
                 console.log(data);
                 qrCode(data);
