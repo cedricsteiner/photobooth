@@ -142,6 +142,11 @@ function getconfig($attribute) {
             bottom: 0.8em;
             border: 0.2em white solid;
         }
+        #home {
+            position: absolute;
+            bottom: 0.5em;
+            right: 0.5em;
+        }
     </style>
 </head>
 <body>
@@ -282,6 +287,6 @@ function getconfig($attribute) {
     </script>
 <?php endif; ?>
 
-
+<a id="home" href="/" class="btn">-</a>
 </body>
 </html>
