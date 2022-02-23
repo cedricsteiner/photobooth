@@ -14,16 +14,26 @@ initdir(getconfig('imagepath') . '/show');
 initdir(getconfig('imagepath') . '/thumb');
 
 $btnClass = "btn btn-warning btn-lg";
-
+$content = '';
 if(isset($_GET['capture'])) {
     $result = runcmd('capture');
-    echo $result;
+    //print_r($result);exit;
+    $image = getCameraImage();
+    $error = true;
+    if($image) {
+        $content = $result;
+        $error = false;
+    }
+    else {
+        $content = $result;
+    }
+    header('Content-type: application/json');
+    echo json_encode(compact('error', 'content'));
     exit;
 }
 if(isset($_GET['prepare'])) {
-    foreach(glob(getconfig('imagepath') . '/tmp/*.jpg') as $image) {
-        break;
-    }
+    $image = getCameraImage();
+    $error = true;
     if($image) {
         $imageName =  date("Y-m-d_H-i-s", time()) . '.jpg';
         $originalImage = getconfig('imagepath') . '/original/' . $imageName;
@@ -35,15 +45,19 @@ if(isset($_GET['prepare'])) {
 
         // converting
         if(convert($originalImage, $showImage, getconfig('photo_size'), getconfig('watermark_size'))) {
-            echo $imageName;
+            $content = $imageName;
+            $error = false;
         }
         else {
-            echo 'Fehler bei der Bildbearbeitung';
+            $content = 'Bildbearbeitung-Fehler';
         }
     }
     else {
-        echo 'Kein Bild gefunden';
+        $content = 'Kamera-Fehler';
     }
+
+    header('Content-type: application/json');
+    echo json_encode(compact('error', 'content'));
     exit;
 }
 if(isset($_GET['upload'])) {
@@ -61,12 +75,25 @@ if(isset($_GET['flashdown'])) {
     exit;
 }
 function runcmd($cmd, $full = false) {
+    if($cmd == 'flashup') {
+        $cmd = 'ola_streaming_client -d ' . getconfig('flash_brightness') . ',' . getconfig('flash_color_r') . ',' . getconfig('flash_color_g') . ',' . getconfig('flash_color_b') . ' 1';
+        $full = true;
+    }
+    else if ($cmd == 'capture') {
+        $cmd = 'cd images/tmp; gphoto2 --capture-image-and-download --set-config capturetarget=1';
+        $full = true;
+    }
+
     if($full) {
-        $result = exec($cmd . ' 2>&1');
+        $result = shell_exec($cmd . ' 2>&1');
     }
     else {
-        $result = exec('sh ./cmd/' . $cmd . '.sh 2>&1');
+        $result = shell_exec('sh ./cmd/' . $cmd . '.sh 2>&1');
     }
+    if(strpos($result, '***') !== false) {
+        $result = substr($result, 0, strpos($result, "For debugging") - 13);
+    }
+
     exec('echo "' . $result . '" >> ./log/cmd.log');
     return $result;
 }
@@ -99,6 +126,12 @@ function webUrl($base, $image) {
 function getconfig($attribute) {
     global $config;
     return $config[$attribute];
+}
+function getCameraImage() {
+    foreach(glob(getconfig('imagepath') . '/tmp/*.jpg') as $image) {
+        break;
+    }
+    return $image;
 }
 ?>
 <!doctype html>
@@ -179,14 +212,15 @@ function getconfig($attribute) {
 <?php elseif(isset($_GET['take'])) : ?>
     <?php
     $result = runcmd('flashup');
-    //echo $result;
     ?><div style="height:100%" class="d-flex align-items-center">
         <div id="preview-wait" class="container text-center">Vorschau ladet...</div>
-        <div id="prepare-wait" style="font-size: 300%; display: none;" class="container text-center">Ein Moment...</div>
+        <div id="prepare-wait" style="font-size: 300%; display: none;" class="container text-center">Einen Moment...</div>
     </div>
     <video autoplay="true" id="camPreview"></video>
         <div class="container bottom-bar">
-            <a class="<?= $btnClass ?>" href="#" onclick="javascript:take();void(0)" id="countdown">Foto aufnehmen</a>
+        <div class="error"><?php if($_GET['error']) echo $_GET['error'] . '. Bitte versuche es noch einmal!'; ?></div>
+
+            <a class="<?= $btnClass ?>" href="#" onclick="javascript:take();$('.error').hide();void(0)" id="countdown">Foto aufnehmen</a>
         </div>
     <script>
         $( document ).ready(function() {
@@ -223,9 +257,14 @@ function getconfig($attribute) {
                 url: "?capture",
             }).done(function(data) {
                 console.log(data);
-                prepare();
+                if(data.error) {
+                    console.log('ERROR', data.content);
+                    location.href = '?take&error=' + data.content;
+                }
+                else {
+                    prepare();
+                }
             });
-            //location.href = '?photo';
         }
         function prepare() {
             $('#countdown').text('Verarbeitung...');
@@ -236,9 +275,13 @@ function getconfig($attribute) {
                 url: "?prepare",
             }).done(function(data) {
                 console.log(data);
-                //$('#countdown').text('Done! ' + data);
-                //$('#photo').attr('src', data);
-                location.href = '?photo&src=' + data;
+                if(data.error) {
+                    console.log('ERROR', data.content);
+                    location.href = '?take&error=' + data.content;
+                }
+                else {
+                    location.href = '?photo&src=' + data.content;
+                }
             });
         }
         function flashdown() {
@@ -262,16 +305,17 @@ function getconfig($attribute) {
         $( document ).ready(function() {
             setTimeout(flashdown, <?= getconfig('flashdown'); ?> * 1000);
             
-            $('#qrbutton').hide();
-            upload();
+            //$('#qrbutton').hide();
+            //upload();
+            qrCode('dummy');
         });
 
         function qrCode(link) {
             var qrEl = $('#qrcode');
             if(qrEl.data('generated') != 1) {
                 var qrcode = new QRCode(document.getElementById("qrcode"), {
-                    text: link,
-                    /*text: '<?= webUrl(getconfig('web_url_base'), $_GET['src']); ?>',*/
+                    /*text: link,*/
+                    text: '<?= webUrl(getconfig('web_url_base'), $_GET['src']); ?>',
                     width : 300,
                     height : 300,
                     useSVG: true
