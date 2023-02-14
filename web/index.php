@@ -214,7 +214,7 @@ function getCameraImage() {
     $result = runcmd('flashup');
     ?><div style="height:100%" class="d-flex align-items-center">
         <div id="preview-wait" class="container text-center">Vorschau ladet...</div>
-        <div id="prepare-wait" style="font-size: 300%; display: none;" class="container text-center">Einen Moment...</div>
+        <div id="prepare-wait" style="font-size: 200%; display: none;" class="container text-center">Einen Moment...</div>
     </div>
     <video autoplay="true" id="camPreview"></video>
         <div class="container bottom-bar">
@@ -295,6 +295,7 @@ function getCameraImage() {
     </script>
 
 <?php elseif(isset($_GET['photo'])) :  ?>
+    <meta http-equiv="refresh" content="<?= getconfig('refresh'); ?>; URL=/">
     <div id="photo" style="background-image:url('/images/thumb/<?= $_GET['src'] ?>');" ></div>
     <div class="container bottom-bar">
         <a class="<?= $btnClass ?>" href="?take">Neues Foto</a>&nbsp;
